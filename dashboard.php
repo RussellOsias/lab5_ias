@@ -2,34 +2,29 @@
 session_start();
 require_once 'config.php';
 
-echo "<h3>Debug Info:</h3>";
+function logAudit($conn, $email, $type) {
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $stmt = $conn->prepare("INSERT INTO audit_log (email, violation_type, ip_address, timestamp) VALUES (?, ?, ?, NOW())");
+    $stmt->bind_param("sss", $email, $type, $ip);
+    $stmt->execute();
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'];
     $password = $_POST['password'];
 
-    echo "<strong>Email Entered:</strong> $email <br>";
-    echo "<strong>Password Entered:</strong> $password <br><br>";
-
     $stmt = $conn->prepare("SELECT id, first_name, last_name, email, password, role FROM users WHERE email = ?");
-    if (!$stmt) {
-        die("Prepare failed: " . $conn->error);
-    }
+    if (!$stmt) die("Prepare failed: " . $conn->error);
 
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
 
-    if ($user = $result->fetch_assoc()) {
-        echo "<pre>";
-        print_r($user);
-        echo "</pre>";
-
-        echo "Stored Hash: " . $user['password'] . "<br>";
-
+    if ($user) {
         if (password_verify($password, $user['password'])) {
-            echo "✅ Password Matched!<br>";
             $_SESSION['user'] = $user;
+            logAudit($conn, $email, "Login Success");
 
             switch ($user['role']) {
                 case 'admin':
@@ -42,25 +37,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     header("Location: resident_dashboard.php");
                     exit();
                 default:
+                    logAudit($conn, $email, "Unauthorized Role");
                     header("Location: index.php?error=unauthorized");
                     exit();
             }
         } else {
-            echo "❌ Password Mismatch.<br>";
+            logAudit($conn, $email, "Wrong Password");
             header("Location: index.php?error=wrong_password");
             exit();
         }
     } else {
-        echo "❌ User Not Found.<br>";
+        logAudit($conn, $email, "Unknown Email");
         header("Location: index.php?error=user_not_found");
         exit();
     }
-
-    echo "🔄 Redirecting back to login...<br>";
-    header("Location: index.php?error=invalid");
-    exit();
 } else {
     echo "⚠️ No POST data received.";
     exit();
 }
-?>

@@ -1,0 +1,161 @@
+CREATE DATABASE wecare_clean;
+USE wecare_clean;
+
+-- Users Table
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    email VARCHAR(255) UNIQUE,
+    password VARCHAR(255),
+    role ENUM('admin', 'officer', 'resident') DEFAULT 'resident',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Complaints Table
+CREATE TABLE complaints (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    resident_id INT,
+    title VARCHAR(255),
+    description TEXT,
+    status ENUM('pending', 'in_progress', 'resolved') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (resident_id) REFERENCES users(id)
+);
+
+ALTER TABLE complaints ADD COLUMN assigned_officer_id INT;
+
+UPDATE complaints SET assigned_officer_id = 2;
+
+
+-- Insert Sample Users
+
+INSERT INTO users 
+(first_name, middle_name, last_name, email, password, phone_number, address, role)
+VALUES
+('Russell', 'B', 'Osias', 'admin@gmail.com', '$2y$10$AnBZBRuzkudzE/uskxEyWe1WmVorOpMaXk1D7pEIrA6Wp/7VMtbgu', '0987654321', 'Barangay Office', 'admin'),
+('Mark John', 'Rama', 'Jopia', 'officer@gmail.com', '$2y$10$AnBZBRuzkudzE/uskxEyWe1WmVorOpMaXk1D7pEIrA6Wp/7VMtbgu', '0987654321', 'Barangay Office', 'officer'),
+('Sample', '', 'Resident', 'resident@gmail.com', '$2y$10$AnBZBRuzkudzE/uskxEyWe1WmVorOpMaXk1D7pEIrA6Wp/7VMtbgu', '1234567890', 'Baluan St.', 'resident');
+-- Insert Sample Complaints
+INSERT INTO complaints (resident_id, title, description, status)
+VALUES
+(3, 'Noise Disturbance', 'Excessive noise from nearby construction at night.', 'in_progress'),
+(3, 'Water Supply Issue', 'No water supply for two days.', 'pending');
+
+
+add encrypted description sa column sir
+
+ALTER TABLE complaints ADD COLUMN description_encrypted BLOB;
+
+
+
+tapos i encrypt nako ang mga naa sa database  kron sir using this query
+
+UPDATE complaints
+SET description_encrypted = AES_ENCRYPT(description, 'SecureKey123!');
+
+
+para ma decyprt sya sir kani akong gamiton na command
+
+SELECT 
+    id,
+    title,
+    CAST(AES_DECRYPT(description_encrypted, 'SecureKey123!') AS CHAR) AS decrypted_description
+FROM complaints;
+
+
+
+tapos mag create kkog rolebased  users -
+-- Admin User
+DROP USER IF EXISTS 'admin_user'@'localhost';
+CREATE USER 'admin_user'@'localhost' IDENTIFIED BY 'AdminPass123!';
+GRANT ALL PRIVILEGES ON wecare_clean.* TO 'admin_user'@'localhost';
+
+-- Officer User
+CREATE USER 'officer_user'@'localhost' IDENTIFIED BY 'OfficerPass123!';
+GRANT SELECT, UPDATE ON wecare_clean.complaints TO 'officer_user'@'localhost';
+
+-- Resident User
+CREATE USER 'resident_user'@'localhost' IDENTIFIED BY 'ResidentPass123!';
+GRANT SELECT ON wecare_clean.complaints TO 'resident_user'@'localhost';
+
+FLUSH PRIVILEGES;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+adding encrypted description column sa complaints
+
+ALTER TABLE complaints ADD COLUMN description_encrypted BLOB;
+
+
+tapos encrypt xisting Descriptions
+
+UPDATE complaints
+SET description_encrypted = AES_ENCRYPT(description, 'SecureKey123!');
+
+
+then drop user 
+DROP USER 'admin_user'@'localhost';
+
+
+
+tapos 
+CREATE USER 'admin_user'@'localhost' IDENTIFIED BY 'AdminPass123!';
+GRANT ALL PRIVILEGES ON wecare2.* TO 'admin_user'@'localhost';
+FLUSH PRIVILEGES;
+
+
+
+-- Officer User
+CREATE USER 'officer_user'@'localhost' IDENTIFIED BY 'OfficerPass123!';
+GRANT SELECT, UPDATE ON wecare_clean.complaints TO 'officer_user'@'localhost';
+
+
+
+
+
+-- Resident User
+CREATE USER 'resident_user'@'localhost' IDENTIFIED BY 'ResidentPass123!';
+GRANT SELECT ON wecare_clean.complaints TO 'resident_user'@'localhost';
+
+
+
+FLUSH PRIVILEGES;
+
+
+then 
+ALTER TABLE complaints ADD COLUMN description_encrypted BLOB;
+
+UPDATE complaints
+SET description_encrypted = AES_ENCRYPT(description, 'SecureKey123!');
+
+then decrypting command
+
+
+
+
+then decryopting ang data
+
+
+
+SELECT 
+    id,
+    title,
+    CAST(AES_DECRYPT(description_encrypted, 'SecureKey123!') AS CHAR) AS decrypted_description
+FROM complaints;
