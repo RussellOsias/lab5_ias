@@ -15,6 +15,12 @@ switch ($error) {
     case 'invalid':
         $errorMsg = 'Invalid login attempt.';
         break;
+    case 'otp_expired':
+        $errorMsg = 'OTP expired. Please login again.';
+        break;
+    case 'wrong_otp':
+        $errorMsg = 'Invalid OTP entered.';
+        break;
 }
 ?>
 <!DOCTYPE html>
@@ -29,7 +35,7 @@ switch ($error) {
         <?php if ($errorMsg): ?>
             <div class="error-message"><?= htmlspecialchars($errorMsg) ?></div>
         <?php endif; ?>
-        <form action="dashboard.php" method="post">
+        <form action="login.php" method="post">
             <input type="text" name="email" placeholder="Email" required>
             <input type="password" name="password" placeholder="Password" required>
             <button type="submit">Login</button>
